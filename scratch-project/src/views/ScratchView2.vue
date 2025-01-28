@@ -1,7 +1,7 @@
 <template>
     <div class="scratchView">
         <div class="scratch-object">
-            <img class="backgroundImg" :src="ImagePath.backGroundImage_letizia_1"/>
+            <img class="backgroundImg" :src="ImagePath.backGroundImage_rekarita_2"/>
             <div class="showScratchDiv">
                 <ScratchComponents 
                     ref="scratchCard" 
@@ -12,7 +12,7 @@
                     :text="'刮一刮文字'" 
                     :imageUrl="imageUrl" 
                     :radius="5" 
-                    :scratchRadius="scratchRadius*sliderValue/100" 
+                    :scratchRadius="scratchRadius*sliderValue/100"
                     
                     @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll">
                         <div class="prize">
@@ -86,7 +86,7 @@ import { SidebarMenu } from 'vue-sidebar-menu';
 import VueSlider from 'vue-slider-component';
 import 'vue-slider-component/theme/default.css';
 
-const imageUrl = ref(ImagePath.backGroundImage_letizia_2);
+const imageUrl = ref(ImagePath.backGroundImage_rekarita_1);
 
 const scratchRadius = window.innerWidth * 0.8 / 8;
 
@@ -216,8 +216,8 @@ onBeforeMount(() => {
 
 .showScratchDiv {
     position: absolute;
-    top: 17.52vw;
-    left: 30vw;
+    top: 26.79vw;
+    left: 33.02vw;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -226,8 +226,8 @@ onBeforeMount(() => {
 }
 
 .prize {
-    width: 42.0875vw;
-    height: 24.05vw;
+    width: 33.20vw;
+    height: 18.97vw;
     user-select: none;
     display: flex;
     align-items: center;
@@ -244,8 +244,8 @@ onBeforeMount(() => {
 
 .prizeShowDiv {
     position: absolute;
-    width: 24.05vw;
-    height: 23.05vw;
+    width: 33.20vw;
+    height: 18.97vw;
     display: flex;
     flex-direction: column;
     align-items: center;

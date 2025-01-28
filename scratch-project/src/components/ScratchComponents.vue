@@ -55,6 +55,7 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 const width = ref(0);
 const height = ref(0);
 const isScratch = ref(false);
+const isScratchComplete = ref(false);
 
 function init() {
     console.log('JN - init0');
@@ -131,37 +132,49 @@ function bindEvents() {
     if (!canvas.value) return;
 
     canvas.value.addEventListener("mousedown", (e) => {
-        isScratch.value = true;
-        drawArc(e);
+        if (!isScratchComplete.value) {
+            isScratch.value = true;
+            drawArc(e);
+        }
     });
 
     canvas.value,addEventListener("mousemove", (e) => {
-        if (isScratch.value == true) {
-            drawArc(e);
+        if (!isScratchComplete.value) {
+            if (isScratch.value == true) {
+                drawArc(e);
+            }
         }
     });
 
     canvas.value,addEventListener("mouseup", (e) => {
-        isScratch.value = false;
-        calcArea();
+        if (!isScratchComplete.value) {
+            isScratch.value = false;
+            calcArea();
+        }
     });
 
     canvas.value.addEventListener("touchstart", (e) => {
-        emits("scratchStart");
-        isScratch.value = true;
-        drawArc(e);
-    });
-
-    canvas.value.addEventListener("touchmove", (e) => {
-        if (isScratch.value == true) {
+        if (!isScratchComplete.value) {
+            emits("scratchStart");
+            isScratch.value = true;
             drawArc(e);
         }
     });
 
+    canvas.value.addEventListener("touchmove", (e) => {
+        if (!isScratchComplete.value) {
+            if (isScratch.value == true) {
+                drawArc(e);
+            }
+        }
+    });
+
     canvas.value.addEventListener("touchend", (e) => {
-        isScratch.value = false;
-        emits("scratchEnd");
-        calcArea();
+        if (!isScratchComplete.value) {
+            isScratch.value = false;
+            emits("scratchEnd");
+            calcArea();
+        }
     });
 }
 
@@ -202,6 +215,7 @@ function reset() {
         console.log('JN - reset3');
         init();
         console.log('JN - reset4');
+        isScratchComplete.value = false;
     });
 }
 
@@ -221,6 +235,7 @@ function calcArea() {
         // canvas.value.remove();
         ctx.value.clearRect(0, 0, width.value, height.value);
         emits("ScratchAll");
+        isScratchComplete.value = true;
     }
 }
 

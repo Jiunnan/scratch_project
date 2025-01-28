@@ -1,12 +1,23 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ScratchView from '../views/ScratchView.vue'
+import ScratchView2 from '../views/ScratchView2.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'scratchView',
     component: ScratchView
+  },
+  {
+    path: '/letizia',
+    name: 'letizia',
+    component: ScratchView
+  },
+  {
+    path: '/rekarita',
+    name: 'rekarita',
+    component: ScratchView2
   },
   {
     path: '/about',
@@ -24,7 +35,8 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  // history: createWebHistory(process.env.BASE_URL),
+  history: createWebHashHistory(process.env.BASE_URL),
   routes
 })
 
