@@ -74,40 +74,40 @@
         <!-- <SidebarMenu :menu="menu" :theme="'white-theme'" @update:collapsed="onToggleCollapse" />
         <SidebarMenu :menu="menu" :theme="'white-theme'" :collapsed="true" :rtl="true" /> -->
     </div>
-</template>
-
-<script setup lang="ts">
-import { ref, onBeforeMount, onMounted } from 'vue';
-import ScratchComponents from '@/components/ScratchComponents.vue';
-import ScratchSettingComponents from '@/components/ScratchSettingComponents.vue';
-import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
-import {ImagePath} from '../resources/web_image';
-import { SidebarMenu } from 'vue-sidebar-menu';
-import VueSlider from 'vue-slider-component';
-import 'vue-slider-component/theme/default.css';
-
-const imageUrl = ref(ImagePath.backGroundImage_rekarita_1);
-
-const scratchRadius = window.innerWidth * 0.8 / 8;
-
-const prizeSettingArray = ref(['1', '2', '3', '4', '5']);
-
-const prizeArray = ref(['1', '2', '3', '4', '5']);
-
-const nowCurrent = ref(-1);
-
-const prizeRecordArray = ref([]);
-
-const prize = ref('1000000 元');
-const scratchCard = ref();
-const isScratchComplete = ref(false);
-const isSideBarOFF = ref(false);
-const isSettingOpen = ref(true);
-const settingValue = ref('1\n2\n3\n4\n5');
-
-const sliderValue = ref(100);
-
-const menu = ref([
+  </template>
+  
+  <script setup lang="ts">
+  import { ref, onBeforeMount, onMounted } from 'vue';
+  import ScratchComponents from '@/components/ScratchComponents.vue';
+  import ScratchSettingComponents from '@/components/ScratchSettingComponents.vue';
+  import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
+  import {ImagePath} from '../resources/web_image';
+  import { SidebarMenu } from 'vue-sidebar-menu';
+  import VueSlider from 'vue-slider-component';
+  import 'vue-slider-component/theme/default.css';
+  
+  const imageUrl = ref(ImagePath.backGroundImage_rekarita_1);
+  
+  const scratchRadius = window.innerWidth * 0.8 / 8;
+  
+  const prizeSettingArray = ref(['1', '2', '3', '4', '5']);
+  
+  const prizeArray = ref(['1', '2', '3', '4', '5']);
+  
+  const nowCurrent = ref(-1);
+  
+  const prizeRecordArray = ref([]);
+  
+  const prize = ref('');
+  const scratchCard = ref();
+  const isScratchComplete = ref(false);
+  const isSideBarOFF = ref(false);
+  const isSettingOpen = ref(true);
+  const settingValue = ref('1\n2\n3\n4\n5');
+  
+  const sliderValue = ref(100);
+  
+  const menu = ref([
     {
         header: 'Main Navigation',
         hiddenOnCollapse: true,
@@ -116,40 +116,40 @@ const menu = ref([
         component: ScratchSettingComponents,
         hiddenOnCollapse: true,
     }
-]);
-
-function onToggleCollapse() {
+  ]);
+  
+  function onToggleCollapse() {
     isSideBarOFF.value = !isSideBarOFF.value
     console.log('JN - onToggleCollapse....', isSideBarOFF.value ? "關閉" : "打開");
     
-}
-
-function scratchStart() {
+  }
+  
+  function scratchStart() {
     console.log("JN - scratch start");
-}
-
-function scratchEnd() {
+  }
+  
+  function scratchEnd() {
     console.log('JN - scratch end');
-}
-
-function scratchAll() {
+  }
+  
+  function scratchAll() {
     console.log('JN - scratch all');
     isScratchComplete.value = true;
     if (prize.value != '') {
         prizeRecordArray.value.push(prize.value);
     }
-}
-
-function reset() {
+  }
+  
+  function reset() {
     console.log('JN - scratch reset');
     isScratchComplete.value = false;
     nowCurrent.value = getRandomInt(0, prizeArray.value.length - 1);
     prize.value = prizeArray.value[nowCurrent.value];
     console.log(`JN - 隨機選項:${nowCurrent.value + 1} - ${prize.value}`);
     scratchCard.value?.reset();
-}
-
-function removePrice() {
+  }
+  
+  function removePrice() {
     console.log('JN - remove price');
     if (isScratchComplete.value) {
         if (prizeArray.value.length > 1) {
@@ -157,172 +157,179 @@ function removePrice() {
             reset();
         }
     }
-}
-
-function resetPrice() {
+  }
+  
+  function resetPrice() {
     console.log('JN - reset price');
     prizeArray.value = [...prizeSettingArray.value];
     reset();
-}
-
-function removeRecord() {
+  }
+  
+  function removeRecord() {
     prizeRecordArray.value = [];
-}
-
-function prizeAdd() {
+  }
+  
+  function prizeAdd() {
     const resArray = settingValue.value.split('\n').filter(item => item != "");
     prizeSettingArray.value = [...resArray];
     prizeArray.value = [...resArray];
     reset();
-}
-
-function openSetting() {
+  }
+  
+  function openSetting() {
     isSettingOpen.value = !isSettingOpen.value;
-}
-
-function getRandomInt(min: number, max: number): number {
+  }
+  
+  function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-onBeforeMount(() => {
+  }
+  
+  onBeforeMount(() => {
     const currentIndex = getRandomInt(0, prizeArray.value.length - 1);
     prize.value = prizeArray.value[Number(currentIndex)];
     console.log(`JN - 隨機選項:${currentIndex + 1} - ${prize.value}`);
     document.title = "電子刮刮樂";
-});
-
-</script>
-
-<style scoped>
-
-.scratchView {
+  });
+  
+  </script>
+  
+  <style scoped>
+  
+  .scratchView {
     display: flex;
     flex-direction: column;
+    align-items: center;
     overflow-y: auto;
     overflow-x: hidden;
-}
-
-.backgroundImg {
+  }
+  
+  .backgroundImg {
     width: 100%;
     height: auto;
     object-fit: contain;
     z-index: 1;
-}
-
-.scratch-object {
+  }
+  
+  .scratch-object {
+    position: relative;
     width: 100%;
+    max-width: 1000px;
     height: auto;
-}
-
-.showScratchDiv {
+  }
+  
+  .showScratchDiv {
     position: absolute;
-    top: 26.79vw;
-    left: 33.02vw;
+    top: 47.2%;
+    left: 33.52%;
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.prize {
+  }
+  
+  .prize {
     width: 33.20vw;
+    max-width: 332px;
     height: 18.97vw;
+    max-height: 189.7px;
     user-select: none;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-}
-
-.prizeImg {
+  }
+  
+  .prizeImg {
     position: absolute;
     width: 100%;
     height: auto;
     object-fit: contain;
-}
-
-.prizeShowDiv {
+  }
+  
+  .prizeShowDiv {
     position: absolute;
     width: 33.20vw;
+    max-width: 332px;
     height: 18.97vw;
+    max-height: 189.7px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.prizeString {
+  }
+  
+  .prizeString {
     position: absolute;
     font-size: large;
     font-family: Arial, Helvetica, sans-serif;
     color: black;
     font-weight: bold;
-}
-
-.scratch-setting {
+  }
+  
+  .scratch-setting {
     width: 100vw;
     height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.showAllSetting {
+  }
+  
+  .showAllSetting {
     display: flex;
     flex-direction: column;
     justify-content: center;
     width: 100%;
     height: auto;
-}
-
-.scratchRadiusValue {
+  }
+  
+  .scratchRadiusValue {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: auto;
-}
-
-.showScratchRadiusValue {
+  }
+  
+  .showScratchRadiusValue {
     font-weight: 400;
     text-align: center;
     line-height: 1.6;
     font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "WenQuanYi Micro Hei", "PMingLiU", sans-serif;
-}
-
-.showSetting {
+  }
+  
+  .showSetting {
     display: flex;
     flex-direction: row;
     gap: 5%;
     width: 100%;
     height: auto;
     justify-content: center;
-}
-
-.slide-enter-active,
-.slide-leave-active {
+  }
+  
+  .slide-enter-active,
+  .slide-leave-active {
   transition: max-height 0.3s ease, padding 0.3s ease;
-}
-
-.slide-enter-from,
-.slide-leave-to {
+  }
+  
+  .slide-enter-from,
+  .slide-leave-to {
   max-height: 0;
   padding: 0 20px;
   opacity: 0;
-}
-
-.setting-field-div {
+  }
+  
+  .setting-field-div {
     width: 40vw;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 10px;
-}
-
-.setting-field {
+  }
+  
+  .setting-field {
     width: 90%;
     height: auto;
     resize: vertical;
@@ -332,9 +339,9 @@ onBeforeMount(() => {
     text-align: center;
     line-height: 1.6;
     font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "WenQuanYi Micro Hei", "PMingLiU", sans-serif;
-}
-
-.scratch-action {
+  }
+  
+  .scratch-action {
     width: 100vw;
     height: auto;
     display: flex;
@@ -342,9 +349,9 @@ onBeforeMount(() => {
     align-items: center;
     justify-content: center;
     z-index: 99;
-}
-
-.btn-reset {
+  }
+  
+  .btn-reset {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -359,9 +366,9 @@ onBeforeMount(() => {
     color: white;
     font-weight: bold;
     font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "WenQuanYi Micro Hei", "PMingLiU", sans-serif;
-}
-
-.tableDiv {
+  }
+  
+  .tableDiv {
     width: 40vw;
     height: auto;
     border: 2px solid silver;
@@ -369,9 +376,9 @@ onBeforeMount(() => {
     overflow: hidden;
     font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "WenQuanYi Micro Hei", "PMingLiU", sans-serif;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.tableTitle {
+  }
+  
+  .tableTitle {
     background-color: #9575cd;
     color: white;
     padding: 10px;
@@ -379,13 +386,13 @@ onBeforeMount(() => {
     font-weight: bold;
     text-align: center;
     border-bottom: 1px solid silver;
-}
-
-.tableData {
+  }
+  
+  .tableData {
     color: #333;
     padding: 15px;
     font-size: medium;
     line-height: 1.6;
-}
-
-</style>
+  }
+  
+  </style>

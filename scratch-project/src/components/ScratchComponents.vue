@@ -3,7 +3,10 @@
         <div ref="slot" class="slot" :style="{borderRadius: radius + 'px'}">
             <slot></slot>
         </div>
-        <canvas v-if="width && height" class="canvas" ref="canvas" :width="width" :height="height"></canvas>
+        <canvas 
+        v-if="width && height" 
+        class="canvas" ref="canvas" 
+        :width="width" :height="height" :style="{border: isScratchComplete ? 'none' : '4px solid silver'}"></canvas>
     </div>
 </template>
 
