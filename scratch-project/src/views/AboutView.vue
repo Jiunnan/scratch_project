@@ -1,60 +1,59 @@
 <template>
   <div class="scratchView">
-      <div class="scratch-object">
+    <br/>
+    <div class="scratchViewRow">
+      <div :style="{width: '10vw', height: '1px'}"></div>
+      <div class="scratchViewBody">
+        <div class="scratch-object">
           <img class="backgroundImg" :src="ImagePath.backGroundImage_rekarita_2"/>
           <div class="showScratchDiv">
-              <ScratchComponents 
-                  ref="scratchCard" 
-                  :scratchPercent="70" 
-                  :maskColor="'skyblue'" 
-                  :fillStyle="'red'" 
-                  :font="'30px Arial'" 
-                  :text="'刮一刮文字'" 
-                  :imageUrl="imageUrl" 
-                  :radius="5" 
-                  :scratchRadius="scratchRadius*sliderValue/100"
-                  
-                  @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll">
-                      <div class="prize">
-                          <!-- <img class="prizeImg" :src="ImagePath.backGroundImage_letizia_1"/> -->
-                           <div class="prizeShowDiv">
-                              <label class="prizeString">{{ prize }}</label>
-                           </div>
-                      </div>
-              </ScratchComponents>
+            <ScratchComponents 
+              ref="scratchCard" 
+              :scratchPercent="70" 
+              :maskColor="'skyblue'" 
+              :fillStyle="'red'" 
+              :font="'30px Arial'" 
+              :text="'刮一刮文字'" 
+              :imageUrl="imageUrl" 
+              :radius="5" 
+              :scratchRadius="scratchRadius*sliderValue/100"    
+              @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll">
+                <div class="prize">
+                  <!-- <img class="prizeImg" :src="ImagePath.backGroundImage_letizia_1"/> -->
+                  <div class="prizeShowDiv">
+                    <label class="prizeString">{{ prize }}</label>
+                  </div>
+                </div>
+            </ScratchComponents>
           </div>
-      </div>
-      <br/><br/><br/>
-      <div class="scratch-setting">
+        </div>
+        <br/><br/><br/>
+        <div class="scratch-setting">
           <div class="btn-reset" :style="{backgroundColor: '#50afe4'}" @click="openSetting">{{ isSettingOpen ? '收回獎項設定' : '打開獎項設定' }}</div>
           <br/>
           <transition name="slider">
-              <div v-show="isSettingOpen" class="showAllSetting">
-                  <div class="scratchRadiusValue">
-                      <h2 class="showScratchRadiusValue">刮刮樂刮除半徑 {{ sliderValue }}%</h2>
-                      <VueSlider v-model="sliderValue" v-bind="{min:10, max:100, dotSize:14, width: '50%', height: 4}"></VueSlider>
-                  </div>
-                  <br/>
-                  <div class="showSetting">
-                      <div class="setting-field-div">
-                          <div class="btn-reset" :style="{backgroundColor: '#75bee9', width: '20vw', height: '20px'}" @click="prizeAdd">修改</div>
-                          <br/>
-                          <textarea class="setting-field" type="text" v-model="settingValue"></textarea>
-                      </div>
-                      <div class="tableDiv">
-                          <div class="tableTitle" :style="{backgroundColor: '#2e99dc'}">中獎項目</div>
-                          <div v-for="(item, index) in prizeArray" class="tableData" :key="index">{{ item }}</div>
-                      </div>
-                  </div>
+            <div v-show="isSettingOpen" class="showAllSetting">
+              <div class="scratchRadiusValue">
+                <h2 class="showScratchRadiusValue">刮刮樂刮除半徑 {{ sliderValue }}%</h2>
+                <VueSlider v-model="sliderValue" v-bind="{min:10, max:100, dotSize:14, width: '50%', height: 4}"></VueSlider>
               </div>
+              <br/>
+              <div class="showSetting">
+                <div class="setting-field-div">
+                  <div class="btn-reset" :style="{backgroundColor: '#75bee9', width: '20vw', height: '20px'}" @click="prizeAdd">修改</div>
+                  <br/>
+                  <textarea class="setting-field" type="text" v-model="settingValue"></textarea>
+                </div>
+                <div class="tableDiv">
+                  <div class="tableTitle" :style="{backgroundColor: '#2e99dc'}">中獎項目</div>
+                  <div v-for="(item, index) in prizeArray" class="tableData" :key="index">{{ item }}</div>
+                </div>
+              </div>
+            </div>
           </transition>
-      </div>
-      <br/>
-      <div class="scratch-action">
-          <div class="tableDiv">
-              <div class="tableTitle">本次中獎</div>
-              <div class="tableData">{{ isScratchComplete ? prize : '' }}</div>
-          </div>
+        </div>
+        <br/>
+        <div class="scratch-action">
           <br/>
           <div class="btn-reset" :style="{backgroundColor: '#e1bee7'}" @click="reset">開始刮刮 / 重新刮刮</div>
           <br/>
@@ -64,13 +63,26 @@
           <br/>
           <div class="btn-reset" :style="{backgroundColor: '#e1bee7'}" @click="removeRecord">清除中獎紀錄</div>
           <br/>
-          <div class="tableDiv">
-              <div class="tableTitle">中獎紀錄</div>
-              <div v-show="prizeRecordArray.length == 0" class="tableData"></div>
-              <div v-for="(item, index) in prizeRecordArray" class="tableData" :key="index">{{ item }}</div>
-          </div>
-          <br/>
+        </div>
       </div>
+      <div class="scratchViewResult">
+        <br/>
+        <div class="tableDiv">
+          <div class="tableTitle">本次中獎</div>
+          <div class="tableData">{{ isScratchComplete ? prize : '' }}</div>
+        </div>
+        <br/>
+        <div class="tableDiv">
+          <div class="tableTitle">中獎紀錄</div>
+          <div v-show="prizeRecordArray.length == 0" class="tableData"></div>
+          <div v-for="(item, index) in prizeRecordArray" class="tableData" :key="index">{{ item }}</div>
+        </div>
+      </div>
+      
+    </div>
+      
+      
+      
       <!-- <SidebarMenu :menu="menu" :theme="'white-theme'" @update:collapsed="onToggleCollapse" />
       <SidebarMenu :menu="menu" :theme="'white-theme'" :collapsed="true" :rtl="true" /> -->
   </div>
@@ -201,10 +213,34 @@ onBeforeMount(() => {
   align-items: center;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: #1ED760;
+  min-height: 100vh;
+  padding: 10px;
+}
+
+.scratchViewRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.scratchViewBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 57vw;
+}
+
+.scratchViewResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 33vw;
 }
 
 .backgroundImg {
-  width: 100%;
+  width: 57vw;
+  max-width: 1000px;
   height: auto;
   object-fit: contain;
   z-index: 1;
@@ -212,15 +248,15 @@ onBeforeMount(() => {
 
 .scratch-object {
   position: relative;
-  width: 100%;
+  width: 57vw;
   max-width: 1000px;
   height: auto;
 }
 
 .showScratchDiv {
   position: absolute;
-  top: 47.2%;
-  left: 33.52%;
+  top: min(268.14px, 15.28vw);
+  left: min(332.2px, 18.94vw);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -229,9 +265,9 @@ onBeforeMount(() => {
 }
 
 .prize {
-  width: 33.20vw;
+  width: 18.92vw;
   max-width: 332px;
-  height: 18.97vw;
+  height: 10.81vw;
   max-height: 189.7px;
   user-select: none;
   display: flex;
@@ -268,7 +304,7 @@ onBeforeMount(() => {
 }
 
 .scratch-setting {
-  width: 100vw;
+  width: 100%;
   height: auto;
   display: flex;
   flex-direction: column;
@@ -322,7 +358,7 @@ opacity: 0;
 }
 
 .setting-field-div {
-  width: 40vw;
+  width: 20vw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -342,7 +378,7 @@ opacity: 0;
 }
 
 .scratch-action {
-  width: 100vw;
+  width: 100%;
   height: auto;
   display: flex;
   flex-direction: column;
@@ -369,7 +405,7 @@ opacity: 0;
 }
 
 .tableDiv {
-  width: 40vw;
+  width: 20vw;
   height: auto;
   border: 2px solid silver;
   border-radius: 10px;
@@ -389,6 +425,7 @@ opacity: 0;
 }
 
 .tableData {
+  background-color: white;
   color: #333;
   padding: 15px;
   font-size: medium;
