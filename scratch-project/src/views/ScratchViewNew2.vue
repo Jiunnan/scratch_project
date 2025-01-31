@@ -75,7 +75,7 @@
                         <tr v-for="(item, index) in prizeSettingCountArray" :key="index">
                           <td>{{ item.item }}</td>
                           <td>
-                            <input type="number" min="1" v-model="item.count" class="prizeCountInput"/>
+                            <input type="number" min="1" v-model="item.count" class="prizeCountInput" @blur="checkInput(index)"/>
                           </td>
                           <!-- <td>{{ item.count }}</td> -->
                         </tr>
@@ -294,6 +294,16 @@
     prizeArray.value = structuredClone(resArray);
     console.log('JN - resArray:', resArray);
     reset();
+  }
+
+  function checkInput(index) {
+    console.log('JN - check Input value:', prizeSettingCountArray.value[index].count);
+    let value = prizeSettingCountArray.value[index].count;
+    if (typeof value != "number" || isNaN(value)) {
+        prizeSettingCountArray.value[index].count = 1
+    } else if (value <= 0) {
+        prizeSettingCountArray.value[index].count = 1
+    }
   }
   
   function openSetting() {

@@ -75,7 +75,7 @@
                         <tr v-for="(item, index) in prizeSettingCountArray" :key="index">
                           <td>{{ item.item }}</td>
                           <td>
-                            <input type="number" min="1" v-model="item.count" class="prizeCountInput"/>
+                            <input type="number" min="1" v-model="item.count" class="prizeCountInput" @blur="checkInput(index)"/>
                           </td>
                           <!-- <td>{{ item.count }}</td> -->
                         </tr>
@@ -126,6 +126,7 @@
   import { SidebarMenu } from 'vue-sidebar-menu';
   import VueSlider from 'vue-slider-component';
   import 'vue-slider-component/theme/default.css';
+import func from '../../../../vue-temp/vue-editor-bridge';
   
   const imageUrl = ref(ImagePath.backGroundImage_letizia_2);
   
@@ -208,7 +209,6 @@
   function onToggleCollapse() {
     isSideBarOFF.value = !isSideBarOFF.value
     console.log('JN - onToggleCollapse....', isSideBarOFF.value ? "關閉" : "打開");
-    
   }
   
   function scratchStart() {
@@ -294,6 +294,16 @@
     prizeArray.value = structuredClone(resArray);
     console.log('JN - resArray:', resArray);
     reset();
+  }
+
+  function checkInput(index) {
+    console.log('JN - check Input value:', prizeSettingCountArray.value[index].count);
+    let value = prizeSettingCountArray.value[index].count;
+    if (typeof value != "number" || isNaN(value)) {
+        prizeSettingCountArray.value[index].count = 1
+    } else if (value <= 0) {
+        prizeSettingCountArray.value[index].count = 1
+    }
   }
   
   function openSetting() {
