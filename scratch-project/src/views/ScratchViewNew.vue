@@ -35,7 +35,8 @@
                 :imageUrl="imageUrl" 
                 :radius="5" 
                 :scratchRadius="scratchRadius*sliderValue/100"    
-                @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll">
+                @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll" 
+                @touchStart="touchStart" @touchEnd="touchEnd">
                   <div class="prize">
                     <div class="prizeShowDiv">
                       <label class="prizeString">{{ prize }}</label>
@@ -193,7 +194,7 @@ import func from '../../../../vue-temp/vue-editor-bridge';
   const isSettingOpen = ref(true);
   const settingValue = ref('1\n2\n3\n4\n5');
   
-  const sliderValue = ref(100);
+  const sliderValue = ref(30);
   
   const menu = ref([
     {
@@ -232,6 +233,14 @@ import func from '../../../../vue-temp/vue-editor-bridge';
         console.log('JN - now prizeNowCountArray:', prizeNowCountArray.value);
     }
   }
+
+function touchStart() {
+  document.body.style.overflow = "hidden";
+}
+
+function touchEnd() {
+  document.body.style.overflow = "";
+}
   
   function reset() {
     console.log('JN - scratch reset');
@@ -372,6 +381,7 @@ import func from '../../../../vue-temp/vue-editor-bridge';
   
   .scratch-object {
     position: relative;
+    user-select: none;
     width: 50vw;
     max-width: 1000px;
     height: auto;

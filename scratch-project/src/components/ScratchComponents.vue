@@ -49,7 +49,7 @@ const props = defineProps({
 });
 
 const emits = defineEmits([
-    'scratchStart', 'scratchEnd', 'ScratchAll'
+    'scratchStart', 'scratchEnd', 'ScratchAll', 'touchStart', 'touchEnd'
 ]);
 
 const ctx = ref<CanvasRenderingContext2D | null | undefined>(null);
@@ -159,6 +159,7 @@ function bindEvents() {
     canvas.value.addEventListener("touchstart", (e) => {
         if (!isScratchComplete.value) {
             emits("scratchStart");
+            emits("touchStart");
             isScratch.value = true;
             drawArc(e);
         }
@@ -176,6 +177,7 @@ function bindEvents() {
         if (!isScratchComplete.value) {
             isScratch.value = false;
             emits("scratchEnd");
+            emits("touchEnd");
             calcArea();
         }
     });
