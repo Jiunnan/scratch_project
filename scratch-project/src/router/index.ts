@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, createWebHashHistory, RouteRecordRaw } 
 import HomeView from '../views/HomeView.vue'
 import ScratchView from '../views/ScratchView.vue'
 import ScratchView2 from '../views/ScratchView2.vue'
+import ScratchViewNew from '../views/ScratchViewNew.vue'
+import ScratchViewNew2 from '../views/ScratchViewNew2.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -15,9 +17,19 @@ const routes: Array<RouteRecordRaw> = [
     component: ScratchView
   },
   {
+    path: '/letizia_new',
+    name: 'letizia_new',
+    component: ScratchViewNew
+  },
+  {
     path: '/rekarita',
     name: 'rekarita',
     component: ScratchView2
+  },
+  {
+    path: '/rekarita_new',
+    name: 'rekarita_new',
+    component: ScratchViewNew2
   },
   {
     path: '/about',
