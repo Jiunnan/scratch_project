@@ -76,6 +76,8 @@ function init() {
 function initCanvas() {
     width.value = slot.value?.offsetWidth || 0;
     height.value = slot.value?.offsetHeight || 0;
+    console.log("JN - initCanvas width: ", width.value);
+    console.log("JN - initCanvas height: ", height.value);
 }
 
 function initDraw() {

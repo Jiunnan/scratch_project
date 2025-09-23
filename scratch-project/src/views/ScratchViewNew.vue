@@ -23,7 +23,7 @@
         </div>
         <div class="scratchViewBody">
           <div class="scratch-object">
-            <img class="backgroundImg" :src="ImagePath.backGroundImage_letizia_1"/>
+            <img class="backgroundImg" :src="scratchConfig.setting.backgroundImage"/>
             <div class="showScratchDiv">
               <ScratchComponents 
                 ref="scratchCard" 
@@ -32,22 +32,37 @@
                 :fillStyle="'red'" 
                 :font="'30px Arial'" 
                 :text="'刮一刮文字'" 
-                :imageUrl="imageUrl" 
+                :imageUrl="scratchConfig.setting.maskImage" 
                 :radius="5" 
                 :scratchRadius="scratchRadius*sliderValue/100"    
                 @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll" 
                 @touchStart="touchStart" @touchEnd="touchEnd">
                   <div class="prize">
                     <div class="prizeShowDiv">
-                      <label class="prizeString">{{ prize }}</label>
+                      <label class="prizeString" :style="{color: scratchConfig.setting.prizeFontColor, fontSize: scratchConfig.setting.prizeFontSize + 'px'}">{{ prize }}</label>
                     </div>
                   </div>
               </ScratchComponents>
             </div>
           </div>
           <br/><br/><br/>
+          <!-- 刮刮樂按鈕 -->
+          <div class="scratch-action">
+            <br/>
+            <div class="btn-reset" :style="{backgroundColor: (prizeArray.length == 0) ? '#f2f2f2' : '#e1bee7'}" @click="reset">開始刮刮 / 重新刮刮</div>
+            <!-- <br/>
+            <div class="btn-reset" :style="{backgroundColor: isScratchComplete ? '#d1c4e9' : '#f2f2f2'}" @click="removePrice">移除此獎項</div> -->
+            <br/>
+            <div class="btn-reset" :style="{backgroundColor: '#b39ddb'}" @click="resetPrice">重置設定的獎項</div>
+            <br/>
+            <div class="btn-reset" :style="{backgroundColor: '#e1bee7'}" @click="removeRecord">清除中獎紀錄</div>
+            <br/>
+          </div>
+          <br/>
+          <!-- 刮刮樂設定 -->
           <div class="scratch-setting">
-            <div class="btn-reset" :style="{backgroundColor: '#50afe4'}" @click="openSetting">{{ isSettingOpen ? '收回獎項設定' : '打開獎項設定' }}</div>
+            <!-- 刮刮樂獎項設定 -->
+            <div class="btn-reset" :style="{backgroundColor: '#50afe4'}" @click="openSetting(true)">{{ isSettingOpen ? '收回獎項設定' : '打開獎項設定' }}</div>
             <br/>
             <transition name="slider">
               <div v-show="isSettingOpen" class="showAllSetting">
@@ -86,17 +101,58 @@
                 </div>
               </div>
             </transition>
-          </div>
-          <br/>
-          <div class="scratch-action">
             <br/>
-            <div class="btn-reset" :style="{backgroundColor: (prizeArray.length == 0) ? '#f2f2f2' : '#e1bee7'}" @click="reset">開始刮刮 / 重新刮刮</div>
-            <!-- <br/>
-            <div class="btn-reset" :style="{backgroundColor: isScratchComplete ? '#d1c4e9' : '#f2f2f2'}" @click="removePrice">移除此獎項</div> -->
+            <!-- 刮刮樂本體設定 -->
+            <div class="btn-reset" :style="{backgroundColor: '#7FCBF0'}" @click="openSetting(false)">{{ isScratchSettingOpen ? '收回刮刮樂本體設定' : '打開刮刮樂本體設定' }}</div>
             <br/>
-            <div class="btn-reset" :style="{backgroundColor: '#b39ddb'}" @click="resetPrice">重置設定的獎項</div>
-            <br/>
-            <div class="btn-reset" :style="{backgroundColor: '#e1bee7'}" @click="removeRecord">清除中獎紀錄</div>
+            <transition name="slider">
+              <div v-show="isScratchSettingOpen" class="showAllSetting">
+                <div>
+                  <h2 class="showScratchRadiusValue">刮刮樂預覽</h2>
+                  <div class="image-overlay">
+                    <img class="bg-img" :src=scratchSettingValue.backgroundImage />
+                    <div class="top-img-wrapper">
+                      <img class="top-img" :src=scratchSettingValue.maskImage :style="{opacity: isScratchSettingTopImgShow ? 1 : 0, width: (scratchSettingValue.scratchRatio / 100 * 20.5) + 'vw', maxWidth: (scratchSettingValue.scratchRatio / 100 * 410) + 'px'}"/>
+                      <label class="middle-label" :style="{color: scratchSettingValue.prizeFontColor, fontWeight: 'bold', fontSize: scratchSettingValue.prizeFontSize + 'px'}">獎品測試文字</label>
+                    </div>
+                  </div>
+                  <br/>
+                  <h2 class="showScratchRadiusValue">
+                    <input type="checkbox" v-model="isScratchSettingTopImgShow" />
+                    顯示刮刮樂圖片
+                  </h2>
+                  <div class="scratchRadiusValue">
+                    <h2 class="showScratchRadiusValue">背景圖片</h2>
+                    <UploadImageToBase64Components ref="bgImgUpload" :isBackgroundImage='true' @imageOutput="getImageBase64"></UploadImageToBase64Components>
+                  </div>
+                  <br/>
+                  <div class="scratchRadiusValue">
+                    <h2 class="showScratchRadiusValue">刮刮樂區圖片</h2>
+                    <UploadImageToBase64Components ref="maskImgUpload" :isBackgroundImage='false' @imageOutput="getImageBase64"></UploadImageToBase64Components>
+                  </div>
+                  <br/>
+                  <!-- <div class="scratchRadiusValue">
+                    <h2 class="showScratchRadiusValue">刮刮樂區域：{{ scratchSettingValue.scratchRatio }}</h2>
+                    <VueSlider v-model="scratchSettingValue.scratchRatio" v-bind="{min:100, max:150, dotSize:14, width: '50%', height: 4}"></VueSlider>
+                  </div>
+                  <br/> -->
+                  <div class="scratchRadiusValue">
+                    <h2 class="showScratchRadiusValue">刮刮樂文字大小: {{ scratchSettingValue.prizeFontSize }}</h2>
+                    <VueSlider v-model="scratchSettingValue.prizeFontSize" v-bind="{min:20, max:40, dotSize:14, width: '50%', height: 4}"></VueSlider>
+                    <h2 class="showScratchRadiusValue">刮刮樂文字顏色</h2>
+                    <ChromePicker v-model="scratchSettingValue.prizeFontColor" />
+                    <h2 class="showScratchRadiusValue" :style="{color: scratchSettingValue.prizeFontColor, fontWeight: 'bold', fontSize: scratchSettingValue.prizeFontSize + 'px'}">獎品測試文字</h2>
+                  </div>
+                  <br/>
+                </div>
+                <br/>
+                <!-- 設定儲存按鈕 -->
+                <div class="btn-group">
+                  <button class="btn purple" @click="resetScratchSetting">重設</button>
+                  <button class="btn blue" @click="applyScratchSetting">套用設定</button>
+                </div>
+              </div>
+            </transition>
             <br/>
           </div>
         </div>
@@ -122,12 +178,15 @@
   import { ref, onBeforeMount, onMounted } from 'vue';
   import ScratchComponents from '@/components/ScratchComponents.vue';
   import ScratchSettingComponents from '@/components/ScratchSettingComponents.vue';
+  import UploadImageToBase64Components from '@/components/UploadImageToBase64Components.vue';
   import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
   import {ImagePath} from '../resources/web_image';
   import { SidebarMenu } from 'vue-sidebar-menu';
+  import { useScratchConfig } from '@/stores/scratchConfig';
+  import { ScratchSetting } from '@/models/ScratchSetting';
   import VueSlider from 'vue-slider-component';
+  import { ChromePicker } from 'vue-color'
   import 'vue-slider-component/theme/default.css';
-import func from '../../../../vue-temp/vue-editor-bridge';
   
   const imageUrl = ref(ImagePath.backGroundImage_letizia_2);
   
@@ -192,6 +251,7 @@ import func from '../../../../vue-temp/vue-editor-bridge';
   const isScratchComplete = ref(false);
   const isSideBarOFF = ref(false);
   const isSettingOpen = ref(true);
+  const isScratchSettingOpen = ref(true);
   const settingValue = ref('1\n2\n3\n4\n5');
   
   const sliderValue = ref(30);
@@ -206,6 +266,21 @@ import func from '../../../../vue-temp/vue-editor-bridge';
         hiddenOnCollapse: true,
     }
   ]);
+
+  // 刮刮樂設定值注入
+  const scratchConfig = useScratchConfig();
+  const scratchSettingValue = ref<ScratchSetting>({
+        backgroundImage: scratchConfig.setting.backgroundImage,
+        maskImage: scratchConfig.setting.maskImage,
+        scratchRatio: scratchConfig.setting.scratchRatio,
+        prizeFontSize: scratchConfig.setting.prizeFontSize,
+        prizeFontColor: scratchConfig.setting.prizeFontColor
+    })
+
+  const isScratchSettingTopImgShow = ref(true);
+
+  const bgImgUpload = ref<InstanceType<typeof UploadImageToBase64Components> | null>(null)
+  const maskImgUpload = ref<InstanceType<typeof UploadImageToBase64Components> | null>(null)
   
   function onToggleCollapse() {
     isSideBarOFF.value = !isSideBarOFF.value
@@ -234,13 +309,46 @@ import func from '../../../../vue-temp/vue-editor-bridge';
     }
   }
 
-function touchStart() {
-  document.body.style.overflow = "hidden";
-}
+  function touchStart() {
+    document.body.style.overflow = "hidden";
+  }
 
-function touchEnd() {
-  document.body.style.overflow = "";
-}
+  function touchEnd() {
+    document.body.style.overflow = "";
+  }
+
+  function applyScratchSetting() {
+    console.log("JN - applyScratchSetting");
+    scratchConfig.setting.backgroundImage = scratchSettingValue.value.backgroundImage;
+    scratchConfig.setting.maskImage = scratchSettingValue.value.maskImage;
+    scratchConfig.setting.scratchRatio = scratchSettingValue.value.scratchRatio;
+    scratchConfig.setting.prizeFontSize = scratchSettingValue.value.prizeFontSize;
+    scratchConfig.setting.prizeFontColor = scratchSettingValue.value.prizeFontColor;
+    resetPrice();
+    alert("已完成修改");
+  }
+
+  function resetScratchSetting() {
+    console.log("JN - resetScratchSetting");
+    scratchSettingValue.value.backgroundImage = scratchConfig.setting.backgroundImage;
+    scratchSettingValue.value.maskImage = scratchConfig.setting.maskImage;
+    scratchSettingValue.value.scratchRatio = scratchConfig.setting.scratchRatio;
+    scratchSettingValue.value.prizeFontSize = scratchConfig.setting.prizeFontSize;
+    scratchSettingValue.value.prizeFontColor = scratchConfig.setting.prizeFontColor;
+    bgImgUpload.value?.clear();
+    maskImgUpload.value?.clear();
+    alert("已清除設定");
+  }
+
+  function getImageBase64({ isBackgroundImage, base64 }: { isBackgroundImage: boolean; base64: string }) {
+    if (isBackgroundImage) {
+      console.log("JN - background image: ", base64);
+      scratchSettingValue.value.backgroundImage = base64;
+    } else {
+      console.log("JN - mask image: ", base64);
+      scratchSettingValue.value.maskImage = base64;
+    }
+  }
   
   function reset() {
     console.log('JN - scratch reset');
@@ -315,8 +423,12 @@ function touchEnd() {
     }
   }
   
-  function openSetting() {
-    isSettingOpen.value = !isSettingOpen.value;
+  function openSetting(isItemSetting: boolean) {
+    if (isItemSetting) {
+      isSettingOpen.value = !isSettingOpen.value;
+    } else {
+      isScratchSettingOpen.value = !isScratchSettingOpen.value;
+    }
   }
   
   function getRandomInt(min: number, max: number): number {
@@ -389,8 +501,9 @@ function touchEnd() {
   
   .showScratchDiv {
     position: absolute;
-    top: min(168.4px, 8.42vw);
-    left: min(299px, 14.95vw);
+    /* top: min(168.4px, 8.42vw); */
+    /* left: min(299px, 14.95vw); */
+    inset: 0;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -616,5 +729,90 @@ function touchEnd() {
     padding: 5px;
     font-size: medium;
   }
+
+  /* 按鈕群組：置中排列 */
+  .btn-group {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  /* 基本按鈕 */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+
+  /* 藍色按鈕 */
+  .btn.blue {
+    background: #46aee0;
+    color: #fff;
+  }
+  .btn.blue:hover {
+    background: #3594c7;
+  }
+
+  /* 紫色按鈕 */
+  .btn.purple {
+    background: #7a66d0;
+    color: #fff;
+  }
+  .btn.purple:hover {
+    background: #5d4eb0;
+  }
+
+  .image-overlay {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 下層圖片 */
+  .bg-img {
+    width: 50vw;
+    max-width: 1000px;
+    height: auto;
+  }
+
+  /* 上層圖片外框 */
+  .top-img-wrapper {
+    position: absolute;
+    /* display: flex; */
+    display: inline-block;
+    /* justify-content: center; */
+    /* align-items: center; */
+    border: 4px solid silver;   /* 銀色外框 */
+    overflow: hidden;
+  }
   
+  /* 上層圖片 */
+  .top-img {
+    /* width: 20.5vw; */
+    /* max-width: 410px; */
+    height: auto;
+    /* 移除底部行內元素間隙 */
+    display: block;
+    position: relative;
+    z-index: 2;
+  }
+
+  .middle-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+    text-align: center;
+    padding: 8px;
+  }
   </style>
