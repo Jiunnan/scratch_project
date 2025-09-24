@@ -85,6 +85,7 @@
                         <tr>
                           <th>中獎項目</th>
                           <th>獎品數量</th>
+                          <th>抽獎比重</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -92,6 +93,9 @@
                           <td>{{ item.item }}</td>
                           <td>
                             <input type="number" min="1" v-model="item.count" class="prizeCountInput" @blur="checkInput(index)"/>
+                          </td>
+                          <td>
+                            <input type="number" min="1" v-model="item.weight" class="prizeCountInput" @blur="checkInput(index)"/>
                           </td>
                           <!-- <td>{{ item.count }}</td> -->
                         </tr>
@@ -199,46 +203,56 @@
   const prizeSettingCountArray = ref([
     {
       'item': '1',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '2',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '3',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '4',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '5',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
   ]);
   
   const prizeNowCountArray = ref([
     {
       'item': '1',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '2',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '3',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '4',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
     {
       'item': '5',
-      'count' : 1
+      'count' : 1,
+      'weight' : 1
     },
   ]);
   
@@ -299,12 +313,16 @@
     console.log('JN - scratch all');
     isScratchComplete.value = true;
     if (prize.value != '') {
+        // prizeRecordArray.value.push(prize.value);
+        // prizeArray.value.splice(nowCurrent.value, 1);
+        // const foundItem = prizeNowCountArray.value.find(obj => obj.item === prize.value);
+        // if (foundItem) {
+        //   foundItem.count--;
+        // }
+
+        // 重新貼上紀錄與減少count
         prizeRecordArray.value.push(prize.value);
-        prizeArray.value.splice(nowCurrent.value, 1);
-        const foundItem = prizeNowCountArray.value.find(obj => obj.item === prize.value);
-        if (foundItem) {
-          foundItem.count--;
-        }
+        prizeNowCountArray.value[nowCurrent.value]["count"] = prizeNowCountArray.value[nowCurrent.value]["count"] - 1;
         console.log('JN - now prizeNowCountArray:', prizeNowCountArray.value);
     }
   }
@@ -352,13 +370,48 @@
   
   function reset() {
     console.log('JN - scratch reset');
-    if (prizeArray.value.length <= 0) {
+
+    // 機率重算
+    let total = 0;
+    const weights = prizeNowCountArray.value.map((row) => {
+      const w = Math.max(0, row["count"]) * Math.max(0, row["weight"]);
+      total += w;
+      console.log("JN - row的比重w: ", w);
+      return w;
+    });
+
+    if (total <= 0) {
       alert("獎項已抽完，若要重新抽獎請按\"重置設定的獎項\"");
       return;
     }
+    // if (prizeArray.value.length <= 0) {
+    //   alert("獎項已抽完，若要重新抽獎請按\"重置設定的獎項\"");
+    //   return;
+    // }
     isScratchComplete.value = false;
-    nowCurrent.value = getRandomInt(0, prizeArray.value.length - 1);
-    prize.value = prizeArray.value[nowCurrent.value];
+
+    // 機率重算
+    console.log("JN - 總數量total: ", total);
+    let r = Math.random() * total;
+    console.log("JN - 亂數r: ", r);
+    console.log("JN - 全部獎品: ", prizeNowCountArray);
+    for (let i = 0; i < prizeNowCountArray.value.length; i++) {
+      const w = weights[i];
+      if (w <= 0 ) continue
+      if (r < w) {
+        console.log("JN - 獎品與數量:", prizeNowCountArray.value[i]["item"], prizeNowCountArray.value[i]["count"])
+        nowCurrent.value = i;
+        prize.value = prizeNowCountArray.value[i]["item"];
+        break;
+      } else {
+        r -= w;
+      }
+      console.log("JN - 處理後的亂數r: ", r);
+    }
+
+    // nowCurrent.value = getRandomInt(0, prizeArray.value.length - 1);
+    // prize.value = prizeArray.value[nowCurrent.value];
+
     console.log(`JN - 隨機選項:${nowCurrent.value + 1} - ${prize.value}`);
     scratchCard.value?.reset();
   }
@@ -389,7 +442,7 @@
     const resArray = settingValue.value.split('\n').filter(item => item != "");
     prizeSettingArray.value = structuredClone(resArray);
     let resCountArray = [];
-    prizeSettingArray.value.map((value) => resCountArray.push({"item": value, "count": 1}));
+    prizeSettingArray.value.map((value) => resCountArray.push({"item": value, "count": 1, "weight": 1}));
     prizeSettingCountArray.value = structuredClone(resCountArray);
     prizeNowCountArray.value = structuredClone(resCountArray);
     prizeArray.value = structuredClone(resArray);
@@ -410,6 +463,7 @@
     prizeSettingArray.value = structuredClone(resArray);
     prizeArray.value = structuredClone(resArray);
     console.log('JN - resArray:', resArray);
+    
     reset();
   }
 
