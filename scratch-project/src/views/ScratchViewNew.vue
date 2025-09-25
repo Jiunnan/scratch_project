@@ -20,6 +20,33 @@
               </tr>
             </tbody>
           </table>
+          <br/>
+          <h2 class="showScratchRadiusValue"><a :href="PublicParam.googleSheetsUrl" target="_blank">
+            抽獎清單
+          </a></h2>
+          <button class="btn purple" @click="refreshGoogleSheetData">重新讀取</button>
+          <br/>
+          <table class="tableGridDiv">
+            <thead>
+              <tr>
+                <th>選取</th>
+                <th>抽獎者</th>
+                <th>抽獎次數</th>
+                <th>已抽獎次數</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in onUseSheetData" :key="index">
+                <td>
+                  <!-- 單選 checkbox：以 selectedIndex 控制 -->
+                  <input type="checkbox" :checked="userIndex === index" :disabled="isFinished(item)" @change="onClickUser(index, $event.target.checked)" />
+                </td>
+                <td>{{ item.userName }}</td>
+                <td>{{ item.scratchCount }}</td>
+                <td>{{ item.useCount }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="scratchViewBody">
           <div class="scratch-object">
@@ -38,7 +65,7 @@
                 @scratchStart="scratchStart" @scratchEnd="scratchEnd" @scratchAll="scratchAll" 
                 @touchStart="touchStart" @touchEnd="touchEnd">
                   <div class="prize">
-                    <div class="prizeShowDiv">
+                    <div class="prizeShowDiv" :style="{backgroundColor: `rgba(255, 255, 255, ${scratchConfig.setting.backgroundWhiteOpacity/100})`}">
                       <label class="prizeString" :style="{color: scratchConfig.setting.prizeFontColor, fontSize: scratchConfig.setting.prizeFontSize + 'px'}">{{ prize }}</label>
                     </div>
                   </div>
@@ -117,7 +144,7 @@
                     <img class="bg-img" :src=scratchSettingValue.backgroundImage />
                     <div class="top-img-wrapper">
                       <img class="top-img" :src=scratchSettingValue.maskImage :style="{opacity: isScratchSettingTopImgShow ? 1 : 0, width: (scratchSettingValue.scratchRatio / 100 * 20.5) + 'vw', maxWidth: (scratchSettingValue.scratchRatio / 100 * 410) + 'px'}"/>
-                      <label class="middle-label" :style="{color: scratchSettingValue.prizeFontColor, fontWeight: 'bold', fontSize: scratchSettingValue.prizeFontSize + 'px'}">獎品測試文字</label>
+                      <label class="middle-label" :style="{color: scratchSettingValue.prizeFontColor, fontWeight: 'bold', fontSize: scratchSettingValue.prizeFontSize + 'px', backgroundColor: `rgba(255, 255, 255, ${scratchSettingValue.backgroundWhiteOpacity/100})`}">獎品測試文字</label>
                     </div>
                   </div>
                   <br/>
@@ -140,6 +167,10 @@
                     <VueSlider v-model="scratchSettingValue.scratchRatio" v-bind="{min:100, max:150, dotSize:14, width: '50%', height: 4}"></VueSlider>
                   </div>
                   <br/> -->
+                  <div class="scratchRadiusValue">
+                    <h2 class="showScratchRadiusValue">刮刮樂背景透明度: {{ scratchSettingValue.backgroundWhiteOpacity }} (0為全透明，100為不透明)</h2>
+                    <VueSlider v-model="scratchSettingValue.backgroundWhiteOpacity" v-bind="{min:0, max:100, dotSize:14, width: '50%', height: 4}"></VueSlider>
+                  </div>
                   <div class="scratchRadiusValue">
                     <h2 class="showScratchRadiusValue">刮刮樂文字大小: {{ scratchSettingValue.prizeFontSize }}</h2>
                     <VueSlider v-model="scratchSettingValue.prizeFontSize" v-bind="{min:20, max:40, dotSize:14, width: '50%', height: 4}"></VueSlider>
@@ -164,8 +195,10 @@
           <br/>
           <div class="tableDiv">
             <div class="tableTitle">本次中獎</div>
-            <div class="tableData">{{ isScratchComplete ? prize : '' }}</div>
+            <div class="tableData">{{ isScratchComplete ? nowPrize : '' }}</div>
           </div>
+          <br/>
+          <button class="btn purple" @click="exportXLSX">紀錄輸出</button>
           <br/>
           <div class="tableDiv">
             <div class="tableTitle">中獎紀錄</div>
@@ -187,10 +220,13 @@
   import {ImagePath} from '../resources/web_image';
   import { SidebarMenu } from 'vue-sidebar-menu';
   import { useScratchConfig } from '@/stores/scratchConfig';
-  import { ScratchSetting } from '@/models/ScratchSetting';
+  import { ScratchSetting, ScratchUser } from '@/models/ScratchSetting';
   import VueSlider from 'vue-slider-component';
   import { ChromePicker } from 'vue-color'
   import 'vue-slider-component/theme/default.css';
+  import { fetchSheetValues } from '@/utils/loadGoogleSheet';
+  import { PublicParam } from '@/resources/public_params';
+import { exportArray2DToXlsx } from '@/utils/exportExcel';
   
   const imageUrl = ref(ImagePath.backGroundImage_letizia_2);
   
@@ -258,6 +294,7 @@
   
   const nowCurrent = ref(-1);
   
+  const nowPrize = ref('');
   const prizeRecordArray = ref([]);
   
   const prize = ref('');
@@ -288,14 +325,20 @@
         maskImage: scratchConfig.setting.maskImage,
         scratchRatio: scratchConfig.setting.scratchRatio,
         prizeFontSize: scratchConfig.setting.prizeFontSize,
-        prizeFontColor: scratchConfig.setting.prizeFontColor
-    })
+        prizeFontColor: scratchConfig.setting.prizeFontColor,
+        backgroundWhiteOpacity: scratchConfig.setting.backgroundWhiteOpacity
+    });
 
   const isScratchSettingTopImgShow = ref(true);
 
-  const bgImgUpload = ref<InstanceType<typeof UploadImageToBase64Components> | null>(null)
-  const maskImgUpload = ref<InstanceType<typeof UploadImageToBase64Components> | null>(null)
+  const bgImgUpload = ref<InstanceType<typeof UploadImageToBase64Components> | null>(null);
+  const maskImgUpload = ref<InstanceType<typeof UploadImageToBase64Components> | null>(null);
   
+  const sheetData = ref<string[][]>([]);
+  const onUseSheetData = ref<ScratchUser[]>([]);
+
+  const userIndex = ref(-1);
+
   function onToggleCollapse() {
     isSideBarOFF.value = !isSideBarOFF.value
     console.log('JN - onToggleCollapse....', isSideBarOFF.value ? "關閉" : "打開");
@@ -321,7 +364,16 @@
         // }
 
         // 重新貼上紀錄與減少count
-        prizeRecordArray.value.push(prize.value);
+        if (userIndex.value != -1) {
+          onUseSheetData.value[userIndex.value].useCount += 1
+          nowPrize.value = onUseSheetData.value[userIndex.value].userName + ' - ' + prize.value;
+          if (onUseSheetData.value[userIndex.value].useCount >= onUseSheetData.value[userIndex.value].scratchCount) {
+            userIndex.value = nextSelectableIndex();
+          }
+        } else {
+          nowPrize.value = prize.value;
+        }
+        prizeRecordArray.value.push(nowPrize.value);
         prizeNowCountArray.value[nowCurrent.value]["count"] = prizeNowCountArray.value[nowCurrent.value]["count"] - 1;
         console.log('JN - now prizeNowCountArray:', prizeNowCountArray.value);
     }
@@ -342,6 +394,7 @@
     scratchConfig.setting.scratchRatio = scratchSettingValue.value.scratchRatio;
     scratchConfig.setting.prizeFontSize = scratchSettingValue.value.prizeFontSize;
     scratchConfig.setting.prizeFontColor = scratchSettingValue.value.prizeFontColor;
+    scratchConfig.setting.backgroundWhiteOpacity = scratchSettingValue.value.backgroundWhiteOpacity;
     resetPrice();
     alert("已完成修改");
   }
@@ -353,6 +406,7 @@
     scratchSettingValue.value.scratchRatio = scratchConfig.setting.scratchRatio;
     scratchSettingValue.value.prizeFontSize = scratchConfig.setting.prizeFontSize;
     scratchSettingValue.value.prizeFontColor = scratchConfig.setting.prizeFontColor;
+    scratchSettingValue.value.backgroundWhiteOpacity = scratchConfig.setting.backgroundWhiteOpacity;
     bgImgUpload.value?.clear();
     maskImgUpload.value?.clear();
     alert("已清除設定");
@@ -430,6 +484,10 @@
     console.log('JN - reset price');
     prizeArray.value = structuredClone(prizeSettingArray.value);
     prizeNowCountArray.value = structuredClone(prizeSettingCountArray.value);
+    for (const u of onUseSheetData.value) {
+      u.useCount = 0;
+    }
+    userIndex.value = 0;
     reset();
     removeRecord();
   }
@@ -484,14 +542,190 @@
       isScratchSettingOpen.value = !isScratchSettingOpen.value;
     }
   }
+
+  function buildUsersFromSheet(
+    rows: (string | number)[][],
+    nameIdx = 0,
+    countIdx = 1
+  ): ScratchUser[] {
+    const map = new Map<string, ScratchUser>()
+    // 跳過標題列，從第 2 列開始
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i] ?? []
+      const nameRaw = row[nameIdx]
+      const countRaw = row[countIdx]
+
+      if (nameRaw == null || nameRaw === '') continue
+
+      const name = String(nameRaw).trim()
+      // 將 "1" / "2.5" 轉 number，非數字則當 0
+      const addCount = Number(countRaw)
+      const inc = Number.isFinite(addCount) ? addCount : 0
+
+      if (!map.has(name)) {
+        map.set(name, {
+          userName: name,
+          scratchCount: inc,
+          useCount: 0, // 初始為 0
+        })
+      } else {
+        // 重複姓名 → 累加 scratchCount，useCount 不變
+        const u = map.get(name)!
+        u.scratchCount += inc
+      }
+    }
+
+    return Array.from(map.values())
+  }
   
   function getRandomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  async function refreshGoogleSheetData() {
+    sheetData.value = await fetchSheetValues({
+      spreadsheetId: PublicParam.spreadsheetId,
+      range: "Sheet1!A1:Z",
+      apiKey: PublicParam.apikey
+    });
+    onUseSheetData.value = reconcileUsersFromSheet(sheetData.value, onUseSheetData.value, 0, 1);
+    console.log("JN - onUseSheetData: ", onUseSheetData.value);
+
+  }
+
+  async function getGoogleSheetData() {
+    sheetData.value = await fetchSheetValues({
+      spreadsheetId: PublicParam.spreadsheetId,
+      range: "Sheet1!A1:B",
+      apiKey: PublicParam.apikey
+    });
+    console.log("JN - getGoogleSheetData: ", sheetData.value);
+    // onUseSheetData.value = buildUsersFromSheet(sheetData.value);
+    for (let i = 1; i < sheetData.value.length; i++) {
+      const resData: ScratchUser = {
+        userName: sheetData.value[i][0],
+        scratchCount: Number(sheetData.value[i][1]),
+        useCount: 0
+      };
+      onUseSheetData.value.push(resData);
+    }
+    console.log("JN - onUseSheetData: ", onUseSheetData.value);
+    if (onUseSheetData.value.length > 0) userIndex.value = 0;
+  }
+
+  function isFinished(resData: ScratchUser) {
+    return resData.useCount >= resData.scratchCount;
+  }
+
+  function onClickUser(index: number, checked: boolean) {
+    if (!checked) {
+      userIndex.value = -1
+      return
+    }
+
+    const userData = onUseSheetData.value[index]
+    if (isFinished(userData)) {
+      const next = nextSelectableIndex(index)
+      userIndex.value = next
+    } else {
+      userIndex.value = index
+    }
+
+    if (onUseSheetData.value.every(isFinished)) {
+      userIndex.value = -1
+    }
+  }
+
+  // 找下一個未抽完的索引（從 start 之後循環找）
+  function nextSelectableIndex(start = -1): number {
+    const list = onUseSheetData.value
+    if (!list.length) return -1
+    for (let step = 1; step <= list.length; step++) {
+      const i = (start + step) % list.length
+      if (!isFinished(list[i])) return i
+    }
+    return -1
+  }
+
+  type Row = (string | number | null | undefined)[]
+
+  function parseSheet(rows: Row[], nameIdx = 0, countIdx = 1) {
+    // rows[0] 是標題: ["姓名","次數"]
+    const body = rows.slice(1)
+    return body
+      .map(r => {
+        const name = String(r?.[nameIdx] ?? '').trim()
+        const raw = r?.[countIdx]
+        const n = Number(raw)
+        const cnt = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0
+        return { userName: name, scratchCount: cnt }
+      })
+      .filter(x => x.userName !== '')
+  }
+
+  function reconcileUsersFromSheet(
+    sheetRows: Row[],
+    prevUsers: ScratchUser[],
+    nameIdx = 0,
+    countIdx = 1
+  ): ScratchUser[] {
+    const latest = parseSheet(sheetRows, nameIdx, countIdx) // [{userName, scratchCount}, ...]
+
+    // 建立「同名 → 舊資料索引佇列」
+    const queues = new Map<string, number[]>()
+    prevUsers.forEach((u, i) => {
+      const q = queues.get(u.userName) ?? []
+      q.push(i)
+      queues.set(u.userName, q)
+    })
+
+    const nextUsers: ScratchUser[] = []
+
+    for (const row of latest) {
+      const q = queues.get(row.userName) ?? []
+      if (q.length > 0) {
+        // 找到舊的一筆來對位
+        const oldIdx = q.shift()!
+        const old = prevUsers[oldIdx]
+        // 更新 scratchCount，保留 useCount（但不超過新 scratchCount）
+        nextUsers.push({
+          userName: row.userName,
+          scratchCount: row.scratchCount,
+          useCount: Math.min(old.useCount, row.scratchCount),
+        })
+        queues.set(row.userName, q)
+      } else {
+        // 新增的新列
+        nextUsers.push({
+          userName: row.userName,
+          scratchCount: row.scratchCount,
+          useCount: 0,
+        })
+      }
+    }
+
+    // queues 中剩下未用到的舊索引 = 那些列在 Sheet 被刪除；我們直接不帶入 nextUsers 即完成刪除
+
+    return nextUsers
+  }
+
+  function exportXLSX() {
+    let outputArr: string[][] = [["暱稱", "獎品"], ...prizeRecordArray.value.map(s => {
+      const m = s.match(/^(.+?)\s*-\s*(.*)$/)
+      if (m) return [m[1].trim(), m[2].trim()]
+      // 找不到分隔符就回傳原字串與空字串，避免丟資料
+      return ["", s.trim()]
+    })];
+    exportArray2DToXlsx(outputArr, '抽獎清單.xlsx', 'Sheet1')
   }
   
   onBeforeMount(() => {
     document.title = "電子刮刮樂";
     reset();
+  });
+
+  onMounted(async () => {
+    await getGoogleSheetData();
   });
   
   </script>
@@ -575,6 +809,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    
   }
   
   .prizeImg {

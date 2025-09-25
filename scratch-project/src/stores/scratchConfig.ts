@@ -13,7 +13,8 @@ export const useScratchConfig  = defineStore('scratchConfig', () => {
         maskImage: ImagePath.backGroundImage_letizia_2,
         scratchRatio: 100, // 100~150
         prizeFontSize: 20,  // 20~40
-        prizeFontColor: '#000000'
+        prizeFontColor: '#000000',
+        backgroundWhiteOpacity: 100
     });
 
     return {
